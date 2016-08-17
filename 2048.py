@@ -3,7 +3,7 @@ import sys
 import termios
 import tty
 import subprocess
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Union
 from random import randint, random
 
 
@@ -13,10 +13,6 @@ Keys are the tile values, values are the "weights".
 1: 3, 4: 1 means 1 comes 75% of the time.
 """
 
-loot_table = {
-        1: 3,
-        4: 1,
-            }
 
 def clear_screen() -> None:
     """Clears the screen"""
@@ -161,14 +157,14 @@ def get_direction() -> str:
         return mappings[ch]
 
 
-def add_random_tile(board: List[List[int]]) -> None:
+def add_random_tile(board: List[List[int]], settings: Dict[int, Union[int, float]]) -> None:
     """(Try to) add a random tile on the board, and return the new board."""
     if is_full(board):
         return board
     def get_tile():
-        N = sum(loot_table.values())
+        N = sum(settings.values())
         rand = random()
-        for choice, weight in loot_table.items():
+        for choice, weight in settings.items():
             if rand < weight/N:
                 return choice
             else:
@@ -182,31 +178,40 @@ def add_random_tile(board: List[List[int]]) -> None:
         return
 
 
-board = [
-        [0,0,0,0],
-        [0,0,0,0],
-        [0,0,0,0],
-        [0,0,0,0],
-        ]
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        settings = eval(sys.argv[1])
+    else:
+        settings = {
+            1: 3,
+            4: 1,
+                }
 
-score = 0
+    board = [
+            [0,0,0,0],
+            [0,0,0,0],
+            [0,0,0,0],
+            [0,0,0,0],
+            ]
 
-add_random_tile(board)
-add_random_tile(board)
-print_board(board)
+    score = 0
 
-last = stringify(board)
+    add_random_tile(board, settings)
+    add_random_tile(board, settings)
+    print_board(board)
 
-while True:
-    direction = get_direction()
-    points, change = move(board, direction)
-    now = stringify(board)
-    score += points
-    if change: add_random_tile(board)
-    if now != last:
-        print_board(board)
-        print(score)
-        last = now
-    if is_game_over(board):
-        print("GAME OVER")
-        break
+    last = stringify(board)
+
+    while True:
+        direction = get_direction()
+        points, change = move(board, direction)
+        now = stringify(board)
+        score += points
+        if change: add_random_tile(board, settings)
+        if now != last:
+            print_board(board)
+            print(score)
+            last = now
+        if is_game_over(board):
+            print("GAME OVER")
+            break
