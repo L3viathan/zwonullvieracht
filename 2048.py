@@ -25,39 +25,51 @@ def clear_screen() -> None:
 def print_board(board: List[List[int]]) -> None:
     """Print the 2048 board."""
     clear_screen()
-    print("-"*(4*4 + 5))
-    for row in range(4):
+    print("-"*(4*Y + 5))
+    for row in range(X):
         print("|", end='')
-        for col in range(4):
+        for col in range(Y):
             number = board[row][col]
             if number == 0: number = ''
             print(str(number).center(4), end='|')
         print("")
-        print("-"*(4*4 + 5))
+        print("-"*(4*Y + 5))
 
 
 def stringify(board: List[List[int]]) -> str:
     """Return a stringified version of the board, for identity checking."""
-    return ''.join(''.join(str(board[row][col]) for col in range(4)) for row in range(4))
+    return ''.join(''.join(str(board[row][col]) for col in range(Y)) for row in range(X))
 
 
 def move(board: List[List[int]], direction: str) -> Tuple[int, bool]:
     """
     (Try to) move in the given direction.
-    
+
     Return the points, and whether change happened.
     """
-    sign, r = (1, range(3, -1, -1)) if direction in ('right', 'down') else (-1, range(4))
+    if direction == 'right':
+        sign = 1
+        r = range(Y-1, -1, -1)
+    elif direction == 'down':
+        sign = 1
+        r = range(X-1, -1, -1)
+    elif direction == 'left':
+        sign = -1
+        r = range(Y)
+    elif direction == 'up':
+        sign = -1
+        r = range(X)
+
     vertical = direction in ('up', 'down')
 
     points = 0
     pre = stringify(board)
 
     if vertical:
-        for col in range(4):
+        for col in range(Y):
             for row in r:
                 while True:
-                    if row >= 3 and direction == "down" or row <= 0 and direction == "up":
+                    if row >= X-1 and direction == "down" or row <= 0 and direction == "up":
                         break
                     if board[row+sign][col] == 0:
                         board[row+sign][col] = board[row][col]
@@ -71,10 +83,10 @@ def move(board: List[List[int]], direction: str) -> Tuple[int, bool]:
                     else:
                         break
     else:
-        for row in range(4):
+        for row in range(X):
             for col in r:
                 while True:
-                    if col >= 3 and direction == "right" or col <= 0 and direction == "left":
+                    if col >= Y-1 and direction == "right" or col <= 0 and direction == "left":
                         break
                     if board[row][col+sign] == 0:
                         board[row][col+sign] = board[row][col]
@@ -94,16 +106,16 @@ def move(board: List[List[int]], direction: str) -> Tuple[int, bool]:
 
 def is_full(board: List[List[int]]) -> bool:
     """Return True iff the board is full (no empty cells)."""
-    return all(all(board[row][col] != 0 for row in range(4)) for col in range(4))
+    return all(all(board[row][col] != 0 for row in range(X)) for col in range(Y))
 
 
 def is_game_over(board: List[List[int]]) -> bool:
     """Return True iff no more moves are possible."""
     if not is_full(board):
         return False
-    if any(any(board[row][col] == board[row][col+1] for col in range(3)) for row in range(4)):
+    if any(any(board[row][col] == board[row][col+1] for col in range(Y-1)) for row in range(X)):
         return False
-    if any(any(board[row][col] == board[row+1][col] for row in range(3)) for col in range(4)):
+    if any(any(board[row][col] == board[row+1][col] for row in range(X-1)) for col in range(Y)):
         return False
     return True
 
@@ -171,7 +183,7 @@ def add_random_tile(board: List[List[int]], settings: Dict[int, Union[int, float
                 rand -= weight/N
         return 'E'
     while True:
-        row, col = randint(0,3), randint(0,3)
+        row, col = randint(0, X-1), randint(0, Y-1)
         if board[row][col] != 0:
             continue
         board[row][col] = get_tile()
@@ -186,13 +198,14 @@ if __name__ == '__main__':
             1: 3,
             4: 1,
                 }
+    if len(sys.argv) > 2:
+        X, Y = map(int, sys.argv[2].split("x"))
+    else:
+        X, Y = 4, 4
 
-    board = [
-            [0,0,0,0],
-            [0,0,0,0],
-            [0,0,0,0],
-            [0,0,0,0],
-            ]
+    board = []
+    for _ in range(X):
+        board.append([0]*Y)
 
     score = 0
 
