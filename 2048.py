@@ -218,6 +218,7 @@ def add_random_tile(
 
 
 if __name__ == "__main__":
+    subprocess.run(["tput", "smcup"])
     if len(sys.argv) > 1:
         SETTINGS = ast.literal_eval(sys.argv[1])
     else:
@@ -256,3 +257,4 @@ if __name__ == "__main__":
         if is_game_over(BOARD):
             print("GAME OVER")
             break
+    subprocess.run(["tput", "rmcup"])
