@@ -1,4 +1,8 @@
+"""
+2048 implementation in Python/termios
+"""
 import os
+import ast
 import sys
 import termios
 import tty
@@ -25,20 +29,23 @@ def clear_screen() -> None:
 def print_board(board: List[List[int]]) -> None:
     """Print the 2048 board."""
     clear_screen()
-    print("-"*(4*Y + 5))
+    print("-" * (4 * Y + 5))
     for row in range(X):
-        print("|", end='')
+        print("|", end="")
         for col in range(Y):
             number = board[row][col]
-            if number == 0: number = ''
-            print(str(number).center(4), end='|')
+            if number == 0:
+                number = ""
+            print(str(number).center(4), end="|")
         print("")
-        print("-"*(4*Y + 5))
+        print("-" * (4 * Y + 5))
 
 
 def stringify(board: List[List[int]]) -> str:
     """Return a stringified version of the board, for identity checking."""
-    return ''.join(''.join(str(board[row][col]) for col in range(Y)) for row in range(X))
+    return "".join(
+        "".join(str(board[row][col]) for col in range(Y)) for row in range(X)
+    )
 
 
 def move(board: List[List[int]], direction: str) -> Tuple[int, bool]:
@@ -47,20 +54,20 @@ def move(board: List[List[int]], direction: str) -> Tuple[int, bool]:
 
     Return the points, and whether change happened.
     """
-    if direction == 'right':
+    if direction == "right":
         sign = 1
-        r = range(Y-1, -1, -1)
-    elif direction == 'down':
+        r = range(Y - 1, -1, -1)
+    elif direction == "down":
         sign = 1
-        r = range(X-1, -1, -1)
-    elif direction == 'left':
+        r = range(X - 1, -1, -1)
+    elif direction == "left":
         sign = -1
         r = range(Y)
-    elif direction == 'up':
+    elif direction == "up":
         sign = -1
         r = range(X)
 
-    vertical = direction in ('up', 'down')
+    vertical = direction in ("up", "down")
 
     points = 0
     pre = stringify(board)
@@ -69,14 +76,19 @@ def move(board: List[List[int]], direction: str) -> Tuple[int, bool]:
         for col in range(Y):
             for row in r:
                 while True:
-                    if row >= X-1 and direction == "down" or row <= 0 and direction == "up":
+                    if (
+                        row >= X - 1
+                        and direction == "down"
+                        or row <= 0
+                        and direction == "up"
+                    ):
                         break
-                    if board[row+sign][col] == 0:
-                        board[row+sign][col] = board[row][col]
+                    if board[row + sign][col] == 0:
+                        board[row + sign][col] = board[row][col]
                         board[row][col] = 0
                         row += sign
-                    elif abs(board[row][col]) == abs(board[row+sign][col]):
-                        board[row+sign][col] += board[row][col]
+                    elif abs(board[row][col]) == abs(board[row + sign][col]):
+                        board[row + sign][col] += board[row][col]
                         board[row][col] = 0
                         row += sign
                         points += board[row][col]
@@ -86,14 +98,19 @@ def move(board: List[List[int]], direction: str) -> Tuple[int, bool]:
         for row in range(X):
             for col in r:
                 while True:
-                    if col >= Y-1 and direction == "right" or col <= 0 and direction == "left":
+                    if (
+                        col >= Y - 1
+                        and direction == "right"
+                        or col <= 0
+                        and direction == "left"
+                    ):
                         break
-                    if board[row][col+sign] == 0:
-                        board[row][col+sign] = board[row][col]
+                    if board[row][col + sign] == 0:
+                        board[row][col + sign] = board[row][col]
                         board[row][col] = 0
                         col += sign
-                    elif abs(board[row][col]) == abs(board[row][col+sign]):
-                        board[row][col+sign] += board[row][col]
+                    elif abs(board[row][col]) == abs(board[row][col + sign]):
+                        board[row][col + sign] += board[row][col]
                         board[row][col] = 0
                         col += sign
                         points += board[row][col]
@@ -113,9 +130,15 @@ def is_game_over(board: List[List[int]]) -> bool:
     """Return True iff no more moves are possible."""
     if not is_full(board):
         return False
-    if any(any(board[row][col] == board[row][col+1] for col in range(Y-1)) for row in range(X)):
+    if any(
+        any(board[row][col] == board[row][col + 1] for col in range(Y - 1))
+        for row in range(X)
+    ):
         return False
-    if any(any(board[row][col] == board[row+1][col] for row in range(X-1)) for col in range(Y)):
+    if any(
+        any(board[row][col] == board[row + 1][col] for row in range(X - 1))
+        for col in range(Y)
+    ):
         return False
     return True
 
@@ -128,19 +151,19 @@ def get_direction() -> str:
     raise a KeyboardInterrupt as expected.
     """
     mappings = {
-            'A': 'up',
-            'B': 'down',
-            'C': 'right',
-            'D': 'left',
-            'a': 'left',
-            'd': 'right',
-            's': 'down',
-            'w': 'up',
-            'h': 'left',
-            'j': 'down',
-            'k': 'up',
-            'l': 'right',
-            }
+        "A": "up",
+        "B": "down",
+        "C": "right",
+        "D": "left",
+        "a": "left",
+        "d": "right",
+        "s": "down",
+        "w": "up",
+        "h": "left",
+        "j": "down",
+        "k": "up",
+        "l": "right",
+    }
     fd = sys.stdin.fileno()
     old = termios.tcgetattr(fd)
     tty.setraw(sys.stdin.fileno())
@@ -152,13 +175,13 @@ def get_direction() -> str:
         if ch in "wasdhjkl":
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
             return mappings[ch]
-        if ch != '\x1b':  # not an escape sequence
+        if ch != "\x1b":  # not an escape sequence
             continue
         ch = sys.stdin.read(1)
         if ord(ch) == 3:  # ^C
             termios.tcsetattr(fd, termios.TCSADRAIN, old)
             raise KeyboardInterrupt
-        if ch != '[':  # not an escape sequence (of the right type)
+        if ch != "[":  # not an escape sequence (of the right type)
             continue
         ch = sys.stdin.read(1)
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
@@ -169,62 +192,67 @@ def get_direction() -> str:
         return mappings[ch]
 
 
-def add_random_tile(board: List[List[int]], settings: Dict[int, Union[int, float]]) -> None:
+def add_random_tile(
+    board: List[List[int]], settings: Dict[int, Union[int, float]],
+) -> None:
     """(Try to) add a random tile on the board, and return the new board."""
     if is_full(board):
         return board
+
     def get_tile():
         N = sum(settings.values())
         rand = random()
         for choice, weight in settings.items():
-            if rand < weight/N:
+            if rand < weight / N:
                 return choice
             else:
-                rand -= weight/N
-        return 'E'
+                rand -= weight / N
+        return "E"
+
     while True:
-        row, col = randint(0, X-1), randint(0, Y-1)
+        row, col = randint(0, X - 1), randint(0, Y - 1)
         if board[row][col] != 0:
             continue
         board[row][col] = get_tile()
         return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) > 1:
-        settings = eval(sys.argv[1])
+        SETTINGS = ast.literal_eval(sys.argv[1])
     else:
-        settings = {
+        SETTINGS = {
             1: 3,
             4: 1,
-                }
+        }
     if len(sys.argv) > 2:
         X, Y = map(int, sys.argv[2].split("x"))
     else:
         X, Y = 4, 4
 
-    board = []
+    BOARD = []
     for _ in range(X):
-        board.append([0]*Y)
+        BOARD.append([0] * Y)
 
     score = 0
 
-    add_random_tile(board, settings)
-    add_random_tile(board, settings)
-    print_board(board)
+    add_random_tile(BOARD, SETTINGS)
+    add_random_tile(BOARD, SETTINGS)
+    print_board(BOARD)
 
-    last = stringify(board)
+    last = stringify(BOARD)
 
     while True:
         direction = get_direction()
-        points, change = move(board, direction)
-        now = stringify(board)
-        score += points
-        if change: add_random_tile(board, settings)
+        POINTS, change = move(BOARD, direction)
+        now = stringify(BOARD)
+        score += POINTS
+        if change:
+            add_random_tile(BOARD, SETTINGS)
         if now != last:
-            print_board(board)
+            print_board(BOARD)
             print(score)
             last = now
-        if is_game_over(board):
+        if is_game_over(BOARD):
             print("GAME OVER")
             break
